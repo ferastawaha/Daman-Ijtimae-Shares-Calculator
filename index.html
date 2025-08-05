@@ -422,9 +422,18 @@
             if (wivesCount > 1) {
                 individualWifeShare = wifeShare / wivesCount;
             }
-
-            if (hasFather) fatherShare = salary * (1 / 6);
-            if (hasMother) motherShare = salary * (1 / 6);
+			parentsTotalShare = salary * (1 / 6);
+			
+            if (hasFather && hasMother) {
+                fatherShare = parentsTotalShare / 2;
+                motherShare = parentsTotalShare / 2;
+            } else if (hasFather) {
+                fatherShare = parentsTotalShare;
+            } else if (hasMother) {
+                motherShare = parentsTotalShare;
+            }
+			
+            
             
             remainingSalary = salary - (wifeShare + fatherShare + motherShare);
 
@@ -433,8 +442,16 @@
             caseNumber = 6;
             childrenShare = salary * (3 / 4);
             
-            if (hasFather) fatherShare = salary * (1 / 6);
-            if (hasMother) motherShare = salary * (1 / 6);
+            parentsTotalShare = salary * (1 / 6);
+			
+            if (hasFather && hasMother) {
+                fatherShare = parentsTotalShare / 2;
+                motherShare = parentsTotalShare / 2;
+            } else if (hasFather) {
+                fatherShare = parentsTotalShare;
+            } else if (hasMother) {
+                motherShare = parentsTotalShare;
+            }
             
             if (childrenCount > 1) {
                 individualChildrenShare = childrenShare / childrenCount;
