@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>احتساب حصص الضمان الاجتماعي</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --accent-color: #28a745;
+            --accent-hover-color: #218838;
+            --danger-color: #dc3545;
+            --danger-hover-color: #c82333;
+            --info-color: #adb5bd;
+            --info-hover-color: #98a1aa;
+            --bg-color: #f8f9fa;
+            --card-bg-color: #ffffff;
+            --text-color: #343a40;
+            --shadow-light: 0 4px 6px rgba(0,0,0,0.1);
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+            text-align: right;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: var(--card-bg-color);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-light);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+        input.error {
+            border-color: var(--danger-color);
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .checkbox-group input {
+            width: auto;
+            margin-left: 10px;
+        }
+
+        button {
+            width: 100%;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 10px;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: var(--shadow-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        #calculateButton {
+            background-color: var(--primary-color);
+        }
+        #calculateButton:hover {
+            background-color: var(--primary-hover-color);
+        }
+
+        #resetButton {
+            background-color: var(--danger-color);
+        }
+        #resetButton:hover {
+            background-color: var(--danger-hover-color);
+        }
+
+        #printButton {
+            background-color: var(--info-color);
+        }
+        #printButton:hover {
+            background-color: var(--info-hover-color);
+        }
+
+        #shareButton {
+            background-color: var(--accent-color);
+        }
+        #shareButton:hover {
+            background-color: var(--accent-hover-color);
+        }
+
+        .results {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: var(--border-radius);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .results h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .results p {
+            margin: 8px 0;
+            font-size: 16px;
+            border-bottom: 1px dashed #ced4da;
+            padding-bottom: 5px;
+        }
+
+        .results p:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .disclaimer {
+            font-size: 14px;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+            padding-top: 10px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .table-image {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .table-image img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-light);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .button-group button {
+            width: auto;
+            flex: 1;
+            margin-top: 0;
+        }
+
+        #sharesChart {
+            margin-top: 20px;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>احتساب حصص الضمان الاجتماعي</h1>
+    <div class="form-group">
+        <label for="salary">راتب المؤمن (من غير قيمة الإعالة)</label>
+        <input type="number" id="salary" name="salary" placeholder="أدخل الراتب هنا" required>
+        <p id="salaryError" class="error-message">الرجاء إدخال راتب صحيح ومطلوب (قيمة أكبر من صفر).</p>
+    </div>
+    <div class="form-group">
+        <label for="wivesCount">عدد الزوجات</label>
+        <input type="number" id="wivesCount" name="wivesCount" value="0" min="0">
+        <p id="wivesError" class="error-message">عدد الزوجات لا يمكن أن يزيد عن 4.</p>
+    </div>
+    <div class="form-group">
+        <label for="childrenCount">عدد الأولاد (ذكور وإناث)</label>
+        <input type="number" id="childrenCount" name="childrenCount" value="0" min="0">
+    </div>
+    <div class="form-group">
+        <label>هل يوجد أب؟</label>
+        <div class="checkbox-group">
+            <input type="checkbox" id="hasFather" name="hasFather">
+            <label for="hasFather">نعم</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>هل يوجد أم؟</label>
+        <div class="checkbox-group">
+            <input type="checkbox" id="hasMother" name="hasMother">
+            <label for="hasMother">نعم</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="siblingsCount">عدد الأخوة (ذكور وإناث)</label>
+        <input type="number" id="siblingsCount" name="siblingsCount" value="0" min="0">
+    </div>
+
+    <div class="button-group">
+        <button onclick="calculateShares()" id="calculateButton">احتساب الحصص</button>
+        <button onclick="resetForm()" id="resetButton">إعادة تعيين</button>
+    </div>
+
+    <button onclick="printResults()" id="printButton">🖨️ طباعة النتائج</button>
+    <button onclick="shareResults()" id="shareButton">📲 مشاركة النتائج</button>
+
+
+    <div class="results" id="results" style="display: none;">
+        <h2>نتائج الحصص:</h2>
+        <p id="caseStatus"></p>
+        <p id="wifeShare"></p>
+        <p id="individualWifeShare"></p>
+        <p id="childrenShare"></p>
+        <p id="individualChildrenShare"></p>
+        <p id="childrenDetails"></p>
+        <p id="fatherShare"></p>
+        <p id="motherShare"></p>
+        <p id="siblingsShare"></p>
+        <p id="individualSiblingsShare"></p>
+        <p id="remainingShare"></p>
+        <canvas id="sharesChart"></canvas>
+        <p class="disclaimer">إخلاء مسؤولية: هذه الأداة هي لأغراض إرشادية فقط. للحصول على استشارة قانونية أو رسمية، يرجى مراجعة الجهات المختصة في الضمان الاجتماعي.</p>
+    </div>
+
+    <div class="table-image">
+        <h3>جدول الأنصبة المستحقة</h3>
+        <img src="damman.jpg" alt="جدول الأنصبة المستحقة">
+    </div>
+</div>
+
+<script>
+    let myChart;
+
+    function calculateShares() {
+        const salaryInput = document.getElementById('salary');
+        const salaryError = document.getElementById('salaryError');
+        const wivesCountInput = document.getElementById('wivesCount');
+        const wivesError = document.getElementById('wivesError');
+        const salary = parseFloat(salaryInput.value);
+        const wivesCount = parseInt(wivesCountInput.value);
+        const childrenCount = parseInt(document.getElementById('childrenCount').value);
+        const hasFather = document.getElementById('hasFather').checked;
+        const hasMother = document.getElementById('hasMother').checked;
+        const siblingsCount = parseInt(document.getElementById('siblingsCount').value);
+
+        // التحقق من صحة الراتب
+        if (isNaN(salary) || salary <= 0) {
+            salaryInput.classList.add('error');
+            salaryError.style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            if (myChart) {
+                myChart.destroy();
+            }
+            return;
+        } else {
+            salaryInput.classList.remove('error');
+            salaryError.style.display = 'none';
+        }
+
+        // التحقق من عدد الزوجات
+        if (wivesCount > 4) {
+            wivesCountInput.classList.add('error');
+            wivesError.style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            if (myChart) {
+                myChart.destroy();
+            }
+            return;
+        } else {
+            wivesCountInput.classList.remove('error');
+            wivesError.style.display = 'none';
+        }
+
+        let remainingSalary = salary;
+        let wifeShare = 0;
+        let individualWifeShare = 0;
+        let childrenShare = 0;
+        let individualChildrenShare = 0;
+        let fatherShare = 0;
+        let motherShare = 0;
+        let siblingsShare = 0;
+        let individualSiblingsShare = 0;
+        let parentsTotalShare = 0;
+        let caseNumber = 0;
+
+        // الحالة الأولى  && siblingsCount === 0)
+        if (wivesCount > 0 && childrenCount > 1 && !hasFather && !hasMother ) {
+            caseNumber = 1;
+            wifeShare = salary * 0.5;
+            childrenShare = salary * 0.5;
+            
+            if (wivesCount > 1) {
+                individualWifeShare = wifeShare / wivesCount;
+            }
+            if (childrenCount > 1) {
+                individualChildrenShare = childrenShare / childrenCount;
+            }
+            
+            remainingSalary = salary - (wifeShare + childrenShare);
+
+        // الحالة الثانية   && siblingsCount === 0
+        } else if (wivesCount > 0 && childrenCount === 1 && (hasFather || hasMother) ) {
+            caseNumber = 2;
+            wifeShare = salary * (1 / 2);
+            childrenShare = salary * (1 / 3);
+            parentsTotalShare = salary * (1 / 6);
+            
+            if (wivesCount > 1) {
+                individualWifeShare = wifeShare / wivesCount;
+            }
+            // childrenCount is 1, so individualChildrenShare is the same as childrenShare
+            individualChildrenShare = childrenShare;
+
+
+            if (hasFather) fatherShare = parentsTotalShare / 2;
+            if (hasMother) motherShare = parentsTotalShare / 2;
+            if (hasFather && !hasMother) fatherShare = parentsTotalShare;
+            if (!hasFather && hasMother) motherShare = parentsTotalShare;
+
+            remainingSalary = salary - (wifeShare + childrenShare + fatherShare + motherShare);
+
+        // الحالة الثالثة  && siblingsCount === 0
+        } else if (wivesCount > 0 && childrenCount === 1 && !hasFather && !hasMother ) {
+            caseNumber = 3;
+            wifeShare = salary * (1 / 2);
+            childrenShare = salary * (1 / 3);
+            
+            if (wivesCount > 1) {
+                individualWifeShare = wifeShare / wivesCount;
+            }
+            // childrenCount is 1, so individualChildrenShare is the same as childrenShare
+            individualChildrenShare = childrenShare;
+
+            remainingSalary = salary - (wifeShare + childrenShare);
+
+        // الحالة الرابعة  && siblingsCount === 0
+        } else if (wivesCount > 0 && childrenCount > 1 && (hasFather || hasMother) ) {
+            caseNumber = 4;
+            wifeShare = salary * (1 / 3);
+            childrenShare = salary * (1 / 2);
+            parentsTotalShare = salary * (1 / 6);
+            
+            if (wivesCount > 1) {
+                individualWifeShare = wifeShare / wivesCount;
+            }
+            if (childrenCount > 1) {
+                individualChildrenShare = childrenShare / childrenCount;
+            }
+
+            if (hasFather && hasMother) {
+                fatherShare = parentsTotalShare / 2;
+                motherShare = parentsTotalShare / 2;
+            } else if (hasFather) {
+                fatherShare = parentsTotalShare;
+            } else if (hasMother) {
+                motherShare = parentsTotalShare;
+            }
+            
+            remainingSalary = salary - (wifeShare + childrenShare + fatherShare + motherShare);
+
+        // الحالة الخامسة  && siblingsCount === 0
+        } else if (wivesCount > 0 && childrenCount === 0 && (hasFather || hasMother) ) {
+            caseNumber = 5;
+            wifeShare = salary * (1 / 2);
+            
+            if (wivesCount > 1) {
+                individualWifeShare = wifeShare / wivesCount;
+            }
+
+            if (hasFather) fatherShare = salary * (1 / 6);
+            if (hasMother) motherShare = salary * (1 / 6);
+            
+            remainingSalary = salary - (wifeShare + fatherShare + motherShare);
+
+        // الحالة السادسة   && siblingsCount === 0
+        } else if (wivesCount === 0 && childrenCount > 1 && (hasFather || hasMother) ) {
+            caseNumber = 6;
+            childrenShare = salary * (3 / 4);
+            
+            if (hasFather) fatherShare = salary * (1 / 6);
+            if (hasMother) motherShare = salary * (1 / 6);
+            
+            if (childrenCount > 1) {
+                individualChildrenShare = childrenShare / childrenCount;
+            }
+            remainingSalary = salary - (childrenShare + fatherShare + motherShare);
+
+        // الحالة السابعة   && siblingsCount === 0
+        } else if (wivesCount === 0 && childrenCount === 1 && (hasFather || hasMother) ) {
+            caseNumber = 7;
+            childrenShare = salary * (1 / 2);
+            individualChildrenShare = childrenShare;
+            
+            if (hasFather) fatherShare = salary * (1 / 6);
+            if (hasMother) motherShare = salary * (1 / 6);
+            
+            remainingSalary = salary - (childrenShare + fatherShare + motherShare);
+
+        // الحالة الثامنة  && siblingsCount === 0
+        } else if (wivesCount === 0 && childrenCount === 0 && (hasFather || hasMother) ) {
+            caseNumber = 8;
+            parentsTotalShare = salary * (3 / 4);
+            
+            if (hasFather && hasMother) {
+                fatherShare = parentsTotalShare / 2;
+                motherShare = parentsTotalShare / 2;
+            } else if (hasFather) {
+                fatherShare = parentsTotalShare;
+            } else if (hasMother) {
+                motherShare = parentsTotalShare;
+            }
+            
+            remainingSalary = salary - parentsTotalShare;
+
+        // الحالة التاسعة
+        } else if (wivesCount === 0 && childrenCount === 0 && (hasFather || hasMother) && siblingsCount > 0) {
+            caseNumber = 9;
+            parentsTotalShare = salary * (1 / 2);
+            siblingsShare = salary * (1 / 2);
+            
+            if (hasFather && hasMother) {
+                fatherShare = parentsTotalShare / 2;
+                motherShare = parentsTotalShare / 2;
+            } else if (hasFather) {
+                fatherShare = parentsTotalShare;
+            } else if (hasMother) {
+                motherShare = parentsTotalShare;
+            }
+            
+            if (siblingsCount > 0) {
+                individualSiblingsShare = siblingsShare / siblingsCount;
+            }
+
+            remainingSalary = salary - (parentsTotalShare + siblingsShare);
+
+        // الحالة العاشرة
+        } else if (wivesCount === 0 && childrenCount === 0 && !hasFather && !hasMother && siblingsCount > 1) {
+            caseNumber = 10;
+            siblingsShare = salary * (1 / 3);
+            individualSiblingsShare = siblingsShare / siblingsCount;
+            remainingSalary = salary - siblingsShare;
+
+        // الحالة الحادية عشرة   && siblingsCount === 0
+        } else if (wivesCount === 0 && childrenCount === 1 && !hasFather && !hasMother ) {
+            caseNumber = 11;
+            childrenShare = salary * (1 / 2);
+            individualChildrenShare = childrenShare;
+            remainingSalary = salary - childrenShare;
+
+        // الحالة الثانية عشرة  && siblingsCount === 0
+        } else if (wivesCount === 0 && childrenCount > 1 && !hasFather && !hasMother ) {
+            caseNumber = 12;
+            childrenShare = salary;
+            if (childrenCount > 1) {
+                 individualChildrenShare = childrenShare / childrenCount;
+            } else {
+                 individualChildrenShare = childrenShare;
+            }
+            remainingSalary = salary - childrenShare;
+            
+        // الحالة الثالثة عشرة   && siblingsCount === 0
+        } else if (wivesCount > 0 && childrenCount === 0 && !hasFather && !hasMother ) {
+            caseNumber = 13;
+            wifeShare = salary * 0.75;
+
+            if (wivesCount > 1) {
+                individualWifeShare = wifeShare / wivesCount;
+            }
+
+            remainingSalary = salary - wifeShare;
+
+        } else {
+            document.getElementById('caseStatus').textContent = 'لا توجد حالة مطابقة للمدخلات.';
+            document.getElementById('results').style.display = 'block';
+            return;
+        }
+
+        document.getElementById('caseStatus').textContent = `الحالة المطبقة: الحالة رقم ${caseNumber} من الجدول.`;
+        document.getElementById('wifeShare').textContent = wivesCount > 0 ? `حصة الزوجة/الزوجات الإجمالية: ${wifeShare.toFixed(2)}` : 'لا يوجد زوجة/زوجات';
+        document.getElementById('individualWifeShare').textContent = wivesCount > 1 ? `حصة الزوجة الواحدة: ${individualWifeShare.toFixed(2)}` : '';
+        document.getElementById('childrenShare').textContent = childrenCount > 0 ? `حصة الأولاد الإجمالية: ${childrenShare.toFixed(2)}` : 'لا يوجد أولاد';
+        document.getElementById('individualChildrenShare').textContent = childrenCount > 0 ? `حصة الولد الواحد: ${individualChildrenShare.toFixed(2)}` : '';
+        
+        if (childrenCount > 0) {
+            document.getElementById('childrenDetails').textContent = 'الذكور من الأولاد شريطة أن لا تتجاوز أعمارهم (٢٣) سنة، ويستثنى من شرط السن المصاب منهم بالعجز الكلي حيث يبقى يأخذ نصيبه المستحق إلى أن تزول حالة العجز بقرار من المرجع الطبي بالضمان.';
+        } else {
+            document.getElementById('childrenDetails').textContent = '';
+        }
+
+        document.getElementById('fatherShare').textContent = hasFather ? `حصة الأب: ${fatherShare.toFixed(2)}` : 'لا يوجد أب';
+        document.getElementById('motherShare').textContent = hasMother ? `حصة الأم: ${motherShare.toFixed(2)}` : 'لا يوجد أم';
+        document.getElementById('siblingsShare').textContent = siblingsCount > 0 ? `حصة الأخوة الإجمالية: ${siblingsShare.toFixed(2)}` : 'لا يوجد أخوة';
+        document.getElementById('individualSiblingsShare').textContent = siblingsCount > 1 ? `حصة الأخ الواحد: ${individualSiblingsShare.toFixed(2)}` : '';
+        document.getElementById('remainingShare').textContent = `الراتب المتبقي: ${remainingSalary.toFixed(2)}`;
+
+        const sharesData = {
+            'الزوجة/الزوجات': wifeShare,
+            'الأولاد': childrenShare,
+            'الأب': fatherShare,
+            'الأم': motherShare,
+            'الأخوة': siblingsShare,
+            'المتبقي': remainingSalary > 0 ? remainingSalary : 0
+        };
+        drawChart(sharesData);
+
+        document.getElementById('results').style.display = 'block';
+    }
+
+    function drawChart(shares) {
+        const ctx = document.getElementById('sharesChart').getContext('2d');
+
+        if (myChart) {
+            myChart.destroy();
+        }
+
+        const filteredShares = Object.entries(shares).filter(([key, value]) => value > 0);
+        const labels = filteredShares.map(([key, value]) => key);
+        const data = filteredShares.map(([key, value]) => value);
+
+        myChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'توزيع الحصص',
+                    data: data,
+                    backgroundColor: [
+                        '#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d'
+                    ],
+                    borderColor: [
+                        '#fff', '#fff', '#fff', '#fff', '#fff', '#fff'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                let label = tooltipItem.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += tooltipItem.raw.toFixed(2) + ' (';
+                                const total = tooltipItem.dataset.data.reduce((sum, current) => sum + current, 0);
+                                const percentage = (tooltipItem.raw / total * 100).toFixed(2);
+                                label += percentage + '%)';
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function printResults() {
+        window.print();
+    }
+
+    async function shareResults() {
+        const resultsElement = document.getElementById('results');
+        const resultsText = resultsElement.innerText;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'نتائج حساب حصص الضمان الاجتماعي',
+                    text: resultsText
+                });
+                console.log('تمت المشاركة بنجاح');
+            } catch (error) {
+                console.error('فشلت المشاركة:', error);
+            }
+        } else {
+            alert('المتصفح لا يدعم ميزة المشاركة. يمكنك نسخ النص التالي:\n\n' + resultsText);
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('salary').value = '';
+        document.getElementById('wivesCount').value = '0';
+        document.getElementById('childrenCount').value = '0';
+        document.getElementById('hasFather').checked = false;
+        document.getElementById('hasMother').checked = false;
+        document.getElementById('siblingsCount').value = '0';
+        document.getElementById('results').style.display = 'none';
+
+        document.getElementById('salary').classList.remove('error');
+        document.getElementById('salaryError').style.display = 'none';
+        
+        document.getElementById('wivesCount').classList.remove('error');
+        document.getElementById('wivesError').style.display = 'none';
+        
+        document.getElementById('childrenDetails').textContent = '';
+        
+        if (myChart) {
+            myChart.destroy();
+        }
+    }
+</script>
+
+</body>
+</html>
